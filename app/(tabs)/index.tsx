@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
@@ -32,11 +32,15 @@ export default function PlansScreen() {
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<TrainingPlan | null>(null);
+  const [editingPlan, setEditingPlan] = useState<TrainingPlan | null>(null);
+
   const [name, setName] = useState("");
   const [day, setDay] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
 
-  const isFormValid = name.trim() && day.trim() && selectedExercises.length > 0;
+  const isFormValid = name.trim() &&  selectedExercises.length > 0;
 
   // 🔹 Trainingspläne und Übungen aus AsyncStorage laden
   useEffect(() => {
@@ -53,6 +57,28 @@ export default function PlansScreen() {
     };
     loadData();
   }, []);
+
+
+  const startEditPlan = (plan: TrainingPlan) => {
+    setEditingPlan(plan);
+    setName(plan.name);
+    setDay(plan.day);
+    setSelectedExercises(plan.exercises);
+    setModalVisible(true);
+  };
+
+
+  const confirmDelete = (plan: TrainingPlan) => {
+    setPlanToDelete(plan);
+    setDeleteModalVisible(true);
+  };
+
+  const deletePlan = () => {
+    if (!planToDelete) return;
+    setPlans(prev => prev.filter(p => p.id !== planToDelete.id));
+    setDeleteModalVisible(false);
+    setPlanToDelete(null);
+  };
 
   // 🔹 Trainingspläne in AsyncStorage speichern
   useEffect(() => {
@@ -75,18 +101,29 @@ export default function PlansScreen() {
   };
 
   const addPlan = () => {
-    if (!isFormValid) return;
+  if (!isFormValid) return;
 
+  if (editingPlan) {
+    // Bearbeiten
+    const updatedPlans = plans.map(p =>
+      p.id === editingPlan.id ? { ...p, name, day, exercises: selectedExercises } : p
+    );
+    setPlans(updatedPlans);
+  } else {
+    // Neu erstellen
     setPlans(prev => [
       ...prev,
       { id: Date.now().toString(), name, day, exercises: selectedExercises },
     ]);
+  }
 
-    setModalVisible(false);
-    setName("");
-    setDay("");
-    setSelectedExercises([]);
-  };
+  setModalVisible(false);
+  setName("");
+  setDay("");
+  setSelectedExercises([]);
+  setEditingPlan(null);
+};
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -98,14 +135,39 @@ export default function PlansScreen() {
         contentContainerStyle={{ alignItems: "stretch", paddingVertical: 10 }}
         renderItem={({ item }) => (
           <View style={styles.planCard}>
-            <Text style={styles.planTitle}>{item.name} – {item.day}</Text>
-            {item.exercises.slice(0, 3).map((ex, idx) => (
-              <Text key={idx} style={styles.planExercise}>
-                • {ex.name} ({ex.sets} x {ex.reps})
-              </Text>
-            ))}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {/* Stift-Button */}
+              <TouchableOpacity
+                onPress={() => startEditPlan(item)}
+                style={{ padding: 8 }}
+              >
+                <MaterialCommunityIcons name="pencil" size={24} color="#4CAF50" />
+              </TouchableOpacity>
+
+              {/* Textbereich */}
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={styles.planTitle}>
+                  {item.name}{item.day ? ` – ${item.day}` : ""}
+                </Text>
+                {item.exercises.slice(0, 3).map((ex, idx) => (
+                  <Text key={idx} style={styles.planExercise}>
+                    • {ex.name} ({ex.sets} x {ex.reps})
+                  </Text>
+                ))}
+              </View>
+
+              {/* Mülleimer */}
+              <TouchableOpacity
+                onPress={() => confirmDelete(item)}
+                style={{ padding: 8 }}
+              >
+                <MaterialIcons name="delete" size={24} color="#E53935" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
+
+
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 20, color: "#aaa" }}>
             Noch keine Trainingspläne
@@ -116,7 +178,13 @@ export default function PlansScreen() {
       {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setModalVisible(true)}
+         onPress={() => {
+          setEditingPlan(null);     // Bearbeitungsmodus verlassen
+          setName("");              // Name leeren
+          setDay("");               // Tag leeren
+          setSelectedExercises([]); // Keine Übungen ausgewählt
+          setModalVisible(true);    // Popup öffnen
+        }}
       >
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
@@ -146,7 +214,8 @@ export default function PlansScreen() {
             />
 
             <Text style={styles.inputLabel}>Übungen auswählen</Text>
-            <ScrollView style={{ maxHeight: 150 }}>
+            <View style={styles.exerciseListContainer}>
+            <ScrollView style={{ maxHeight: 240 }}>
               {allExercises.length === 0 ? (
                 <Text style={{ color: "#aaa", marginVertical: 5 }}>Keine Übungen vorhanden</Text>
               ) : (
@@ -164,6 +233,7 @@ export default function PlansScreen() {
                 ))
               )}
             </ScrollView>
+            </View>
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -187,6 +257,35 @@ export default function PlansScreen() {
         </View>
       </Modal>
 
+      {/*Popup zum Löschen*/}
+      <Modal visible={deleteModalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { width: "80%" }]}>
+            <Text style={[styles.modalTitle, { color: "#fff" }]}>
+              Willst du diesen Plan wirklich löschen?
+            </Text>
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 15 }}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => {
+                  setDeleteModalVisible(false);
+                  setEditingPlan(null); // 🔹 Bearbeitungsstatus zurücksetzen
+                }}
+              >
+                <Text style={styles.buttonText}>Abbrechen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.saveButton]}
+                onPress={deletePlan}
+              >
+                <Text style={styles.buttonText}>Löschen</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
     </View>
   );
 }
@@ -205,7 +304,7 @@ const styles = StyleSheet.create({
     width: "90%",
     alignItems: "center",           
     backgroundColor: "#2E2E2E",
-    borderRadius: 100,
+    borderRadius: 20,
     paddingVertical: 15,
     paddingHorizontal: 20,
     marginVertical: 8,
@@ -243,6 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#212124",
     borderRadius: 10,
     padding: 20,
+     maxHeight: "80%", // 🔹 Popup nimmt mehr Höhe
   },
   modalTitle: {
     fontSize: 18,
@@ -290,4 +390,14 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: "#007AFF" },
   saveButtonDisabled: { backgroundColor: "#555" },
   buttonText: { color: "#fff" },
+
+
+  exerciseListContainer: {
+  borderWidth: 1,
+  borderColor: "#555",
+  borderRadius: 8,
+  padding: 5,
+  marginVertical: 8,
+  maxHeight: 240, // Höhe für ca. 6 Übungen
+},
 });
