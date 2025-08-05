@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -40,24 +41,31 @@ export default function PlansScreen() {
   const [day, setDay] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
 
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<TrainingPlan | null>(null);
+
   const isFormValid = name.trim() &&  selectedExercises.length > 0;
 
   // 🔹 Trainingspläne und Übungen aus AsyncStorage laden
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const storedPlans = await AsyncStorage.getItem("trainingPlans");
-        if (storedPlans) setPlans(JSON.parse(storedPlans));
+  useFocusEffect(
+    useCallback(() => {
+      const loadExercises = async () => {
+        try {
+          const storedExercises = await AsyncStorage.getItem("exercises");
+          if (storedExercises) setAllExercises(JSON.parse(storedExercises));
+        } catch (error) {
+          console.error("Fehler beim Laden der Übungen:", error);
+        }
+      };
+      loadExercises();
+    }, [])
+  );
 
-        const storedExercises = await AsyncStorage.getItem("exercises");
-        if (storedExercises) setAllExercises(JSON.parse(storedExercises));
-      } catch (error) {
-        console.error("Fehler beim Laden:", error);
-      }
-    };
-    loadData();
-  }, []);
 
+  const openViewPlan = (plan: TrainingPlan) => {
+    setSelectedPlan(plan);
+    setViewModalVisible(true);
+  };
 
   const startEditPlan = (plan: TrainingPlan) => {
     setEditingPlan(plan);
@@ -145,7 +153,10 @@ export default function PlansScreen() {
               </TouchableOpacity>
 
               {/* Textbereich */}
-              <View style={{ flex: 1, alignItems: "center" }}>
+              <TouchableOpacity 
+                style={{ flex: 1, alignItems: "center" }} 
+                onPress={() => openViewPlan(item)}
+              >
                 <Text style={styles.planTitle}>
                   {item.name}{item.day ? ` – ${item.day}` : ""}
                 </Text>
@@ -154,7 +165,7 @@ export default function PlansScreen() {
                     • {ex.name} ({ex.sets} x {ex.reps})
                   </Text>
                 ))}
-              </View>
+              </TouchableOpacity>
 
               {/* Mülleimer */}
               <TouchableOpacity
@@ -285,6 +296,44 @@ export default function PlansScreen() {
         </View>
       </Modal>
 
+      <Modal visible={viewModalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.viewModalContent}>
+            {selectedPlan && (
+              <>
+                <Text style={styles.viewModalTitle}>
+                  {selectedPlan.name}{selectedPlan.day ? ` – ${selectedPlan.day}` : ""}
+                </Text>
+
+                <FlatList
+                  data={selectedPlan.exercises}
+                  keyExtractor={(ex) => ex.id}
+                  contentContainerStyle={{ alignItems: "center", paddingVertical: 5 }}
+                  renderItem={({ item }) => (
+                    <View style={styles.exerciseCard}>
+                      <Text style={styles.exerciseName}>{item.name}</Text>
+                      <Text style={styles.exerciseMiddle}>
+                        {item.sets} x {item.reps}
+                      </Text>
+                      <Text style={styles.exerciseWeight}>
+                        {item.weight} kg
+                      </Text>
+                    </View>
+                  )}
+                />
+
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: "#E53935", marginTop: 10, alignSelf: "flex-end" }]}
+                  onPress={() => setViewModalVisible(false)}
+                >
+                  <Text style={styles.buttonText }>Schließen</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
 
     </View>
   );
@@ -399,5 +448,42 @@ const styles = StyleSheet.create({
   padding: 5,
   marginVertical: 8,
   maxHeight: 240, // Höhe für ca. 6 Übungen
+  },
+
+  viewModalContent: {
+  width: "90%",
+  maxHeight: "80%",
+  backgroundColor: "#212124",
+  borderRadius: 10,
+  padding: 20,
 },
+viewModalTitle: {
+  fontSize: 18,
+  fontWeight: "bold",
+  color: "#fff",
+  marginBottom: 10,
+  textAlign: "center",
+},
+exerciseCard: {
+  width: "90%",
+  backgroundColor: "#2E2E2E",
+  borderRadius: 50,
+  paddingVertical: 15,
+  paddingHorizontal: 20,
+  marginVertical: 8,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  elevation: 3,
+  shadowColor: "#000",
+  shadowOpacity: 0.2,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 5,
+},
+exerciseName: { flex: 1, fontWeight: "bold", color: "#fff" },
+exerciseMiddle: { flex: 1, textAlign: "center", color: "#fff" },
+exerciseWeight: { flex: 1, textAlign: "right", color: "#fff" },
+
+
+
 });
