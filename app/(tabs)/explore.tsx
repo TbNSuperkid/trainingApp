@@ -125,7 +125,7 @@ export default function ExercisesScreen() {
       <Text style={styles.header}>Übungen</Text>
       {/* Übungsliste */}
       <FlatList
-        data={exercises}
+        data={[...exercises].sort((a, b) => a.name.localeCompare(b.name))}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ alignItems: "center", paddingVertical: 10 }}
         renderItem={({ item }) => (
