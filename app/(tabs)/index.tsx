@@ -62,6 +62,34 @@ export default function PlansScreen() {
   );
 
 
+  // Laden beim Start
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const storedPlans = await AsyncStorage.getItem("trainingPlans");
+        if (storedPlans) {
+          setPlans(JSON.parse(storedPlans));
+        }
+      } catch (error) {
+        console.error("Fehler beim Laden der Pläne:", error);
+      }
+    };
+    loadPlans();
+  }, []);
+
+  // Speichern bei jeder Änderung
+  useEffect(() => {
+    const savePlans = async () => {
+      try {
+        await AsyncStorage.setItem("trainingPlans", JSON.stringify(plans));
+      } catch (error) {
+        console.error("Fehler beim Speichern der Pläne:", error);
+      }
+    };
+    savePlans();
+  }, [plans]);
+
+
   const openViewPlan = (plan: TrainingPlan) => {
     setSelectedPlan(plan);
     setViewModalVisible(true);
@@ -88,17 +116,6 @@ export default function PlansScreen() {
     setPlanToDelete(null);
   };
 
-  // 🔹 Trainingspläne in AsyncStorage speichern
-  useEffect(() => {
-    const savePlans = async () => {
-      try {
-        await AsyncStorage.setItem("trainingPlans", JSON.stringify(plans));
-      } catch (error) {
-        console.error("Fehler beim Speichern:", error);
-      }
-    };
-    savePlans();
-  }, [plans]);
 
   const toggleExerciseSelection = (exercise: Exercise) => {
     if (selectedExercises.find(e => e.id === exercise.id)) {
@@ -112,13 +129,14 @@ export default function PlansScreen() {
   if (!isFormValid) return;
 
   if (editingPlan) {
-    // Bearbeiten
-    const updatedPlans = plans.map(p =>
-      p.id === editingPlan.id ? { ...p, name, day, exercises: selectedExercises } : p
+    setPlans(prev =>
+      prev.map(p =>
+        p.id === editingPlan.id
+          ? { ...p, name, day, exercises: selectedExercises }
+          : p
+      )
     );
-    setPlans(updatedPlans);
   } else {
-    // Neu erstellen
     setPlans(prev => [
       ...prev,
       { id: Date.now().toString(), name, day, exercises: selectedExercises },
@@ -126,11 +144,13 @@ export default function PlansScreen() {
   }
 
   setModalVisible(false);
+  setEditingPlan(null);
   setName("");
   setDay("");
   setSelectedExercises([]);
-  setEditingPlan(null);
 };
+
+
 
 
   return (

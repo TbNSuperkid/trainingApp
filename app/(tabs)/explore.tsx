@@ -2,13 +2,11 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
-  FlatList,
-  Modal,
+  FlatList, Keyboard, Modal,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  View,
+  TouchableOpacity, TouchableWithoutFeedback, View
 } from "react-native";
 
 type Exercise = {
@@ -26,6 +24,9 @@ export default function ExercisesScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [name, setName] = useState("");
   const [sets, setSets] = useState("");
@@ -61,6 +62,10 @@ export default function ExercisesScreen() {
     saveExercises();
   }, [exercises]);
 
+
+  const filteredExercises = exercises.filter(ex =>
+    ex.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const openAddModal = () => {
     setEditingExercise(null);
@@ -121,11 +126,43 @@ export default function ExercisesScreen() {
   };
 
   return (
+      <TouchableWithoutFeedback
+        onPress={() => {
+          if (searchVisible) {
+            setSearchVisible(false);
+            setSearchQuery("");
+          }
+          Keyboard.dismiss();
+        }}
+      >
     <View style={{ flex: 1 }}>
-      <Text style={styles.header}>Übungen</Text>
+      <View style={styles.headerRow}>
+  {/* Überschrift immer links */}
+  <Text style={styles.header}>Übungen</Text>
+
+  {/* Suchleiste nur sichtbar, wenn aktiviert */}
+  {searchVisible && (
+    <TextInput
+      style={styles.searchInput}
+      placeholder="Suche..."
+      placeholderTextColor="#aaa"
+      value={searchQuery}
+      onChangeText={setSearchQuery}
+      autoFocus
+    />
+  )}
+
+  {/* Lupe immer rechts */}
+  <TouchableOpacity onPress={() => setSearchVisible(prev => !prev)}>
+    <Ionicons name="search" size={24} color="#fff" />
+  </TouchableOpacity>
+</View>
+
+
+
       {/* Übungsliste */}
       <FlatList
-        data={[...exercises].sort((a, b) => a.name.localeCompare(b.name))}
+        data={[...filteredExercises].sort((a, b) => a.name.localeCompare(b.name))}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ alignItems: "center", paddingVertical: 10 }}
         renderItem={({ item }) => (
@@ -255,6 +292,8 @@ export default function ExercisesScreen() {
       </Modal>
 
     </View>
+  
+  </TouchableWithoutFeedback>
   );
 }
 
@@ -264,8 +303,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
-    marginTop: 45,
-    marginBottom: 5,
+    marginTop: 20,
+    marginBottom: 25,
+    marginRight: 10,
   },
 
   exerciseCard: {
@@ -344,9 +384,28 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff" },
 
   inputLabel: {
+    color: "#fff",
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 2,
+  },
+ headerRow: {
+  flexDirection: "row",
+  alignItems: "center",   // Überschrift & Lupe exakt auf einer Höhe
+  justifyContent: "space-between",
+  marginTop: 45,
+  marginHorizontal: 20,
+},
+
+searchInput: {
+  flex: 1,                       // füllt Platz zwischen Titel & Lupe
+  backgroundColor: "#2E2E2E",
+  borderRadius: 8,
+  paddingHorizontal: 10,
+  marginHorizontal: 10,          // Abstand zu Titel & Lupe
   color: "#fff",
-  fontSize: 14,
-  marginTop: 8,
-  marginBottom: 2,
+  borderWidth: 1,
+  borderColor: "#555",
+  height: 35,
 },
 });
