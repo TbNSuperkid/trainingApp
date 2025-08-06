@@ -27,14 +27,14 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="plans"
         options={{
           title: 'Trainingspläne',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="weight-lifter" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="exercises"
         options={{
           title: 'Übungen',
           tabBarIcon: ({ color, size }) => (
