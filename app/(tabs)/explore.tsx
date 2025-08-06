@@ -196,7 +196,7 @@ export default function ExercisesScreen() {
       </TouchableOpacity>
 
       {/* Popup Add/Edit */}
-      <Modal visible={modalVisible} transparent animationType="fade">
+      <Modal visible={modalVisible} transparent animationType="fade"  onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
@@ -267,7 +267,7 @@ export default function ExercisesScreen() {
       </Modal>
 
       {/* Delete Confirmation Popup */}
-      <Modal visible={deleteModalVisible} transparent animationType="fade">
+      <Modal visible={deleteModalVisible} transparent animationType="fade"  onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
             <Text style={[styles.modalTitle, { color: '#fff' }]}>
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   exerciseCard: {
     width: "90%",
     backgroundColor: "#2E2E2E",
-    borderRadius: 50,
+    borderRadius: 15,
     paddingVertical: 15,
     paddingHorizontal: 20,
     marginVertical: 8,

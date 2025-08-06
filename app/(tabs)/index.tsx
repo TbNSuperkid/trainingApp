@@ -234,7 +234,8 @@ export default function PlansScreen() {
       </TouchableOpacity>
 
       {/* Popup */}
-      <Modal visible={modalVisible} transparent animationType="fade">
+      <Modal visible={modalVisible} transparent animationType="fade" statusBarTranslucent={true}  onRequestClose={() => setModalVisible(false)}>
+        
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Trainingsplan erstellen</Text>
@@ -246,6 +247,7 @@ export default function PlansScreen() {
               value={name}
               onChangeText={setName}
               style={styles.input}
+              autoFocus={true} // ⬅ Fokus beim Öffnen
             />
 
             <Text style={styles.inputLabel}>Wochentag</Text>
@@ -259,7 +261,7 @@ export default function PlansScreen() {
 
             <Text style={styles.inputLabel}>Übungen auswählen</Text>
             <View style={styles.exerciseListContainer}>
-            <ScrollView style={{ maxHeight: 240 }}>
+            <ScrollView style={{ maxHeight: 350 }}>
               {allExercises.length === 0 ? (
                 <Text style={{ color: "#aaa", marginVertical: 5 }}>Keine Übungen vorhanden</Text>
               ) : (
@@ -302,7 +304,7 @@ export default function PlansScreen() {
       </Modal>
 
       {/*Popup zum Löschen*/}
-      <Modal visible={deleteModalVisible} transparent animationType="fade">
+      <Modal visible={deleteModalVisible} transparent animationType="fade"  onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: "80%" }]}>
             <Text style={[styles.modalTitle, { color: "#fff" }]}>
@@ -329,9 +331,10 @@ export default function PlansScreen() {
         </View>
       </Modal>
 
-      <Modal visible={viewModalVisible} transparent animationType="fade">
+      {/* Popup zum Anzeigen eines Plans */}
+      <Modal visible={viewModalVisible} transparent animationType="fade"  onRequestClose={() => setViewModalVisible(false)}>
         <View style={styles.modalContainer}>
-          <View style={styles.viewModalContent}>
+          <View style={[styles.modalContent, { width: "85%" }]}>
             {selectedPlan && (
               <>
                 <Text style={styles.viewModalTitle}>
@@ -433,13 +436,14 @@ planExercise: {
     backgroundColor: "rgba(33,33,36,0.4)",
     justifyContent: "center",
     alignItems: "center",
+    
   },
   modalContent: {
     width: "85%",
     backgroundColor: "#212124",
     borderRadius: 10,
     padding: 20,
-     maxHeight: "80%", // 🔹 Popup nimmt mehr Höhe
+    maxHeight: "80%", 
   },
   modalTitle: {
     fontSize: 18,
@@ -503,7 +507,7 @@ exerciseCardPlan: {
   paddingVertical: 6,
   paddingHorizontal: 10,
   marginVertical: 4,
-  width: "90%",           // Jede Karte etwas schmaler, damit es mittig wirkt
+  width: "85%",           // Jede Karte etwas schmaler, damit es mittig wirkt
   backgroundColor: "#3A3A3A",
 },
 exerciseText: {
