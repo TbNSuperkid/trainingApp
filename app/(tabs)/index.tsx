@@ -162,42 +162,55 @@ export default function PlansScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ alignItems: "stretch", paddingVertical: 10 }}
         renderItem={({ item }) => (
-          <View style={styles.planCard}>
+          <TouchableOpacity 
+            style={styles.planCard} 
+            activeOpacity={0.9}
+            onPress={() => openViewPlan(item)}
+          >
+            {/* Erste Zeile: Stift - Titel - Mülleimer */}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {/* Stift-Button */}
+              {/* Stift */}
               <TouchableOpacity
-                onPress={() => startEditPlan(item)}
+                onPress={(e) => { e.stopPropagation(); startEditPlan(item); }}
                 style={{ padding: 8 }}
               >
                 <MaterialCommunityIcons name="pencil" size={24} color="#4CAF50" />
               </TouchableOpacity>
 
-              {/* Textbereich */}
-              <TouchableOpacity 
-                style={{ flex: 1, alignItems: "center" }} 
-                onPress={() => openViewPlan(item)}
-              >
+              {/* Titel */}
+              <View style={{ flex: 1, alignItems: "center" }}>
                 <Text style={styles.planTitle}>
                   {item.name}{item.day ? ` – ${item.day}` : ""}
                 </Text>
-                {item.exercises.slice(0, 3).map((ex, idx) => (
-                  <Text key={idx} style={styles.planExercise}>
-                    • {ex.name} ({ex.sets} x {ex.reps})
-                  </Text>
-                ))}
-              </TouchableOpacity>
+              </View>
 
               {/* Mülleimer */}
               <TouchableOpacity
-                onPress={() => confirmDelete(item)}
+                onPress={(e) => { e.stopPropagation(); confirmDelete(item); }}
                 style={{ padding: 8 }}
               >
                 <MaterialIcons name="delete" size={24} color="#E53935" />
               </TouchableOpacity>
             </View>
-          </View>
-        )}
 
+            {/* Übungen – jede mit eigener Mini-Karte */}
+            <View style={styles.exerciseListWrapper}>
+              {item.exercises.slice(0, 3).map((ex, idx) => (
+                <View key={idx} style={styles.exerciseCardPlan}>
+                  <Text style={[styles.exerciseText, { flex: 1, textAlign: "left" }]}>
+                    {ex.name}
+                  </Text>
+                  <Text style={[styles.exerciseText, { flex: 1, textAlign: "center" }]}>
+                    {ex.sets} x {ex.reps}
+                  </Text>
+                  <Text style={[styles.exerciseText, { flex: 1, textAlign: "right" }]}>
+                    {ex.weight} kg
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </TouchableOpacity>
+        )}
 
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 20, color: "#aaa" }}>
@@ -370,22 +383,37 @@ const styles = StyleSheet.create({
   },
 
   planCard: {
-    width: "90%",
-    alignItems: "center",           
-    backgroundColor: "#2E2E2E",
-    borderRadius: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginVertical: 8,
-    alignSelf: "center",     // 🔹 ganz wichtig, damit die 90% in FlatList greifen
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+  width: "90%",
+  alignSelf: "center",           
+  backgroundColor: "#2E2E2E",
+  borderRadius: 20,
+  paddingVertical: 15,
+  paddingHorizontal: 20,
+  marginVertical: 8,
+  elevation: 3,
+  shadowColor: "#000",
+  shadowOpacity: 0.2,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 5,
+},
+
+exerciseListContainer: {
+  borderWidth: 1,
+  borderColor: "#555",
+  borderRadius: 8,
+  padding: 5,
+  marginVertical: 8,
+  maxHeight: 240, // Höhe für ca. 6 Übungen
   },
+planExercise: {
+  color: "#ccc",
+  textAlign: "left",
+  marginVertical: 2,
+},
+
+
   planTitle: { fontWeight: "bold", color: "#fff", marginBottom: 5 },
-  planExercise: { color: "#ccc", marginLeft: 5 },
+  
 
   fab: {
     position: "absolute",
@@ -434,6 +462,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   exerciseSelect: {
+    alignItems: "center",
     padding: 8,
     borderWidth: 1,
     borderColor: "#555",
@@ -461,14 +490,26 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff" },
 
 
-  exerciseListContainer: {
+  exerciseListWrapper: {
+  marginTop: 8,
+  width: "100%",
+  alignItems: "center", // Übungen mittig innerhalb der Plan-Karte
+},
+exerciseCardPlan: {
+   flexDirection: "row",
   borderWidth: 1,
   borderColor: "#555",
   borderRadius: 8,
-  padding: 5,
-  marginVertical: 8,
-  maxHeight: 240, // Höhe für ca. 6 Übungen
-  },
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  marginVertical: 4,
+  width: "90%",           // Jede Karte etwas schmaler, damit es mittig wirkt
+  backgroundColor: "#3A3A3A",
+},
+exerciseText: {
+  color: "#ccc",
+  textAlign: "left",
+},
 
   viewModalContent: {
   width: "90%",
