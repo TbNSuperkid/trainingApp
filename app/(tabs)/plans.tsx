@@ -381,15 +381,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
-    marginTop: 45,
-    marginBottom: 5,
+    marginTop: 65,
+    marginBottom: 25,
   },
 
   planCard: {
   width: "90%",
   alignSelf: "center",           
   backgroundColor: "#2E2E2E",
-  borderRadius: 20,
+  borderRadius: 15,
   paddingVertical: 15,
   paddingHorizontal: 20,
   marginVertical: 8,

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "training",
-    "slug": "training",
+    "name": "Training",
+    "slug": "Training",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "training",
+    "icon": "./assets/images/training_icon.png",
+    "scheme": "Training",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
